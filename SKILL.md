@@ -1,25 +1,20 @@
 ---
 name: auto-research-notebooklm
 description: >
-  Investiga automáticamente cualquier tema usando NotebookLM via MCP y
-  produce entregables estructurados en Markdown.
+  Investigación profunda usando NotebookLM via MCP. Produce entregables
+  estructurados en Markdown (informes, mapas mentales, fuentes, etc.).
 
-  ACTIVAR cuando el usuario use señales como: "investiga", "busca información",
-  "quiero aprender sobre", "crea un informe de", "resumen de", "fuentes sobre",
-  "analiza el tema", "recopila conocimiento", "hazme un deep-dive",
-  "necesito entender", "prepárame un briefing" — o pida mapas mentales,
-  análisis comparativos, reportes, o recopilación sistemática de fuentes.
+  ACTIVACIÓN EXPLÍCITA ÚNICAMENTE. Este skill NO se auto-activa.
+  Solo se ejecuta cuando el usuario invoca explícitamente con frases como:
+  "notebook research, investiga: [tema]"
+  "usando el skill notebook research, investiga: [tema]"
+  "ejecuta notebook research sobre [tema]"
 
-  NO ACTIVAR para: preguntas factuales de respuesta directa ("¿cuánto mide
-  la Torre Eiffel?"), búsquedas de un solo dato, cálculos puntuales,
-  traducciones simples, o tareas donde la respuesta cabe en un párrafo
-  sin necesidad de múltiples fuentes.
-
-  CRITERIO DE DECISIÓN: si la respuesta requiere ≥3 fuentes para ser
-  rigurosa, activa el skill. Si una sola fuente o tu conocimiento bastan,
-  responde directamente.
+  NO ACTIVAR bajo ninguna otra circunstancia, ni siquiera si el usuario
+  dice "investiga", "busca información" u otras palabras de investigación
+  sin mencionar explícitamente "notebook research" como prefijo.
 tags: [research, notebooklm, mcp, reports, mindmap, deep-research]
-version: "2.0"
+version: "2.1"
 ---
 
 # SKILL: Auto-Research con NotebookLM MCP
@@ -75,11 +70,25 @@ Antes de ejecutar, ten presente las herramientas reales del servidor `notebooklm
 
 ### FASE 0 — Activación y encuadre
 
-Al detectar que la solicitud califica como investigación:
+**REGLA DE ACTIVACIÓN**: Este skill SOLO se ejecuta cuando el usuario lo
+invoca explícitamente con una de estas formas:
+
+```
+"notebook research, investiga: [tema]"
+"usando el skill notebook research, investiga: [tema]"
+"ejecuta notebook research sobre [tema]"
+"notebook research: [tema]"
+```
+
+Si el usuario dice "investiga X" SIN el prefijo "notebook research",
+NO activar este skill — responder directamente o preguntar si quiere
+usar el skill de investigación profunda.
+
+**Al activarse:**
 
 1. **Confirma el encuadre** en máximo 2 frases:
-   > "Entendido. Voy a guiarte por un proceso de investigación sobre [tema]
-   > en 4 fases: intake → recopilación → análisis → entregables. Empecemos."
+   > "🔬 Skill Notebook Research activado. Voy a guiarte por 4 fases para
+   > investigar [tema]: intake → recopilación → análisis → entregables."
 
 2. **Verifica autenticación MCP**: internamente llama `notebook_list` para
    confirmar que el servidor está operativo. Si falla, ejecuta `refresh_auth`
@@ -443,12 +452,12 @@ Si el usuario pide profundizar después de la entrega inicial:
 
 ## Examples
 
-### ✅ Activación correcta
+### ✅ Activación correcta (invocación explícita)
 
-**Usuario:** "Quiero investigar sobre energía solar para mi tesis"
+**Usuario:** "notebook research, investiga: energía solar para mi tesis"
 **Agente:**
-> Entendido. Voy a guiarte por 4 fases para documentar tu investigación sobre
-> energía solar. Primero necesito entender el scope:
+> 🔬 Skill Notebook Research activado. Voy a guiarte por 4 fases para
+> investigar energía solar. Primero necesito entender el scope:
 >
 > **Tema y objetivo:**
 > 1. El tema es energía solar — ¿hay algún ángulo específico (fotovoltaica,
@@ -456,23 +465,35 @@ Si el usuario pide profundizar después de la entrega inicial:
 > 2. ¿Tu tesis busca demostrar algo, comparar alternativas, o proponer un diseño?
 > 3. ¿Cuánto sabes ya del tema? (0-10)
 
----
+**Usuario:** "usando el skill notebook research, investiga: microservicios vs monolitos"
+→ ✅ Se activa el skill.
 
-### ❌ No activar (respuesta directa)
-
-**Usuario:** "¿Cuántos paneles solares necesito para una casa de 100 m²?"
-→ Responder directamente con cálculo estimado. No iniciar flujo.
-
-**Usuario:** "Tradúceme este párrafo al inglés"
-→ Traducir directamente. No iniciar flujo.
+**Usuario:** "ejecuta notebook research sobre regulación de IA en la UE"
+→ ✅ Se activa el skill.
 
 ---
 
-### 🔄 Manejo de ambigüedad
+### ❌ NO activar (sin prefijo explícito)
 
-**Usuario:** "Investiga algo sobre IA"
+**Usuario:** "Investiga sobre energía solar"
+→ ❌ NO activar el skill. Responder directamente o preguntar:
+> "¿Quieres que haga una investigación profunda con el skill Notebook Research?
+> Si es así, dime: `notebook research, investiga: energía solar`"
+
+**Usuario:** "Busca información sobre IA"
+→ ❌ NO activar. Responder con lo que se sabe o sugerir el skill.
+
+**Usuario:** "¿Cuántos paneles solares necesito para 100 m²?"
+→ ❌ NO activar. Respuesta directa.
+
+---
+
+### 🔄 Manejo de ambigüedad (con invocación correcta)
+
+**Usuario:** "notebook research, investiga: IA"
 **Agente:**
-> ¡Con gusto! "IA" es un campo enorme. Para enfocar la investigación,
+> 🔬 Skill Notebook Research activado.
+> "IA" es un campo enorme. Para enfocar la investigación,
 > ¿cuál de estos ángulos te interesa más?
 >
 > 1. 🔧 **Técnico** — modelos, arquitecturas, frameworks
